@@ -1,0 +1,58 @@
+<!-- Page 1: Patient Blood Results -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blood Lab Results</title>
+<link rel="stylesheet" href="styles.css"> <!-- Link to the CSS file -->
+</head>
+<body>
+<div class="container">
+<h1>Blood Lab Results</h1>
+<div class="patient-info">
+<p><strong>Patient Name:</strong> John Doe</p>
+</div>
+<table>
+<tr>
+<th>Test</th>
+<th>Result</th>
+<th>Normal Range</th>
+</tr>
+<tr>
+<td>Hemoglobin</td>
+<td data-result="13.5" data-unit="g/dL" data-normal-min="13.8" data-normal-max="17.2">13.5 g/dL</td>
+<td>13.8 - 17.2 g/dL</td>
+</tr>
+<tr>
+<td>White Blood Cells</td>
+<td data-result="5500" data-unit="/mcL" data-normal-min="4500" data-normal-max="11000">5,500 /mcL</td>
+<td>4,500 - 11,000 /mcL</td>
+</tr>
+<!-- Add more lab results here -->
+</table>
+<button onclick="goToConsultationPage()">Talk to a Doctor</button>
+</div>
+ 
+    <script>
+        function goToConsultationPage() {
+            window.location.href = 'consultation_form.html';  // Redirects to page 2
+        }
+ 
+        function highlightResults() {
+            const resultCells = document.querySelectorAll('td[data-result]');
+            resultCells.forEach(cell => {
+                const result = parseFloat(cell.getAttribute('data-result'));
+                const normalMin = parseFloat(cell.getAttribute('data-normal-min'));
+                const normalMax = parseFloat(cell.getAttribute('data-normal-max'));
+                if (result < normalMin || result > normalMax) {
+                    cell.classList.add('abnormal');
+                } else {
+                    cell.classList.add('normal');
+                }
+            });
+        }
+ 
+        window.onload = highlightResults;
+</script>
+</body>
+</html>

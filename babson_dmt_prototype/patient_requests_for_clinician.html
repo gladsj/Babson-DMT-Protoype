@@ -1,0 +1,111 @@
+<!-- patient_requests.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Patient Requests</title>
+<link rel="stylesheet" href="styles.css"> <!-- Link to the CSS file -->
+</head>
+<body>
+<div class="container">
+<h1>Patient Requests for <span id="dmt"></span></h1>
+ 
+        <!-- Display patient results -->
+<h2>Patient Lab Results</h2>
+<div class="patient-info">
+<p><strong>Patient Name:</strong> John Doe</p>
+<p><strong>Hemoglobin:</strong> 13.5 g/dL</p>
+<p><strong>White Blood Cells:</strong> 5,500 /mcL</p>
+<p><strong>Patient Phone Number:</strong> <span id="phone_number">+18325693002</span></p>
+</div>
+ 
+        <!-- Chat Box for Twilio Messaging -->
+<h2>Clinician-Patient Messaging</h2>
+<div class="chat-box" id="chat-box">
+<!-- Chat messages will be dynamically loaded here -->
+</div>
+ 
+        <!-- Input and button for messaging system -->
+<textarea class="chat-input" id="message" placeholder="Type your message here..."></textarea>
+<button class="chat-button" id="sendMessageButton">Send Message</button>
+</div>
+ 
+    <script>
+        // Get the DMT from the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const dmt = urlParams.get('dmt') || 'clinician';
+        document.getElementById('dmt').innerText = dmt.charAt(0).toUpperCase() + dmt.slice(1).replace("_", " ");
+ 
+        // Function to load chat messages
+        function loadChatMessages() {
+            fetch('/get_messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    phone_number: document.getElementById('phone_number').innerText,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const chatBox = document.getElementById('chat-box');
+                chatBox.innerHTML = ''; // Clear existing messages
+                data.messages.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message', msg.sender);
+                    messageDiv.innerText = msg.text;
+                    chatBox.appendChild(messageDiv);
+                });
+                chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the bottom
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+ 
+        // Initial load of chat messages
+        loadChatMessages();
+ 
+        // Polling for new messages every 5 seconds
+        setInterval(loadChatMessages, 5000);
+ 
+        // Handle sending SMS via Twilio
+        document.getElementById('sendMessageButton').addEventListener('click', function () {
+            const phoneNumber = document.getElementById('phone_number').innerText;
+            const message = document.getElementById('message').value;
+ 
+            if (message.trim() === "") {
+                alert("Please enter a message before sending.");
+                return;
+            }
+ 
+            // Send the message via backend API
+            fetch('/send_sms', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    phone_number: phoneNumber,
+                    message: message,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    // Reload chat messages to include the new message
+                    loadChatMessages();
+                    document.getElementById('message').value = "";  // Clear the input after sending
+                } else {
+                    alert("Error sending message: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert("Failed to send message. Please try again later.");
+            });
+        });
+</script>
+</body>
+</html>
